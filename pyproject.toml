@@ -1,0 +1,50 @@
+[project]
+name = "thesis-agent"
+description = "研究生论文撰写多 Agent 系统(主从协同 + 短/长期/自进化记忆 + 本地 faiss RAG + langgraph)"
+version = "0.1.0"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    # 编排框架
+    "langgraph",
+    "langgraph-checkpoint-sqlite",
+    "aiosqlite",
+    # 本地向量库
+    "faiss-cpu",
+    # 本地 embedding + rerank(BGE-M3 / bge-reranker)
+    "sentence-transformers",
+    # 钉 torch CPU 2.6:2.13 需要更新指令集,i7-8550U(仅 AVX2)加载失败
+    "torch==2.6.0",
+    # PDF 解析
+    "pymupdf",
+    # 引用管理
+    "bibtexparser",
+    # 配置与数据模型
+    "pydantic>=2.7",
+    "pydantic-settings",
+    "PyYAML",
+    # CLI 输出
+    "rich",
+    # 网络搜索(arxiv / Semantic Scholar 官方 API)
+    "httpx",
+    # LLM 客户端(DeepSeek 走 OpenAI 兼容协议;Claude 走 anthropic)
+    "openai",
+    "anthropic",
+    # 环境变量
+    "python-dotenv",
+    "fastapi>=0.141.1",
+    "uvicorn>=0.52.4",
+]
+
+[project.scripts]
+thesis-agent = "thesis_agent.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/thesis_agent"]
+
+[tool.uv]
+# 国内网络环境:优先走阿里云 PyPI 镜像(清华镜像近期不稳定)
+index-url = "https://mirrors.aliyun.com/pypi/simple/"

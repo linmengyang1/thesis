@@ -1,0 +1,57 @@
+# thesis-multiagent 配置文件
+# 路径均相对于项目根目录
+
+# 数据路径
+data_dir: data
+papers_dir: data/papers          # 本地论文 PDF 目录
+index_dir: data/index            # faiss 索引 + 元数据 SQLite
+db_path: data/db/thesis.db       # 任务板 / 引用库 / checkpoint SQLite
+output_dir: data/output          # 章节产物与最终论文
+experiments_dir: data/experiments  # 实验数据与统计摘要
+
+# 模型分级(混合策略)
+# strong: 主 agent / Planner / Critic(评审)—— 需要强推理
+# medium: Researcher / Editor —— 综合能力
+# cheap : Drafter(章节撰写)—— 便宜大碗,可并行多个实例
+# 密钥说明:从 .env 环境变量读取(DEEPSEEK_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY)
+# 模型:DeepSeek V4 提供 deepseek-v4-flash(快速通用)与 deepseek-v4-pro(高能力)
+llm:
+  strong:
+    provider: deepseek            # anthropic | openai | deepseek
+    model: deepseek-v4-flash
+    temperature: 0.7
+  medium:
+    provider: deepseek
+    model: deepseek-v4-flash
+    temperature: 0.7
+  cheap:
+    provider: deepseek
+    model: deepseek-v4-flash
+    temperature: 0.8
+
+# RAG 配置
+rag:
+  chunk_size_tokens: 500
+  chunk_overlap: 0.1
+  top_k_candidate: 100           # faiss 粗排
+  top_k_final: 20                # rerank 精排
+  embedding_model: "BAAI/bge-m3" # 本地 embedding,首次运行会下载模型
+  rerank_model: "BAAI/bge-reranker-base"  # 本地 rerank
+  shards: 8                      # faiss 分区数(按子领域分片)
+
+# Web 搜索
+search:
+  arxiv_api: "https://export.arxiv.org/api/query"
+  semantic_scholar_api: "https://api.semanticscholar.org/graph/v1/paper/search"
+  max_results: 10
+
+# 编排参数
+orchestrator:
+  max_review_rounds: 3           # 评审-修订最大轮次,超限升级人工
+  context_window_tokens: 15000   # 子任务上下文窗口上限
+
+# 论文信息(由用户填写)
+thesis:
+  topic: ""                      # 论文主题
+  venue: ""                      # 目标会议/期刊
+  language: en                   # en | zh

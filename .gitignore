@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+frontend/node_modules/
+frontend/dist/
+data/index/*
+!data/index/.gitkeep
+data/db/*
+!data/db/.gitkeep
+data/output/*
+!data/output/.gitkeep
+data/papers/*.pdf
