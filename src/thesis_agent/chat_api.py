@@ -208,6 +208,9 @@ def ingest_web_citation(payload: dict) -> dict[str, Any]:
 
 	同步执行(下载 + 解析 + embedding + 写 faiss 分片),FastAPI 在线程池中
 	运行,不阻塞 SSE 聊天事件循环;失败返回 ok=False + 原因,前端展示。
+
+	降级链路:无开放获取 PDF 时(arXiv/openAccessPdf 都没有),转科研通文献
+	互助渠道(paper-downloader MCP server)发布求助,返回求助 ID 供后续确认下载。
 	"""
 	from .models import Citation
 	from .rag.web_ingest import ingest_citation
@@ -216,6 +219,8 @@ def ingest_web_citation(payload: dict) -> dict[str, Any]:
 	try:
 		return ingest_citation(cit)
 	except Exception as e:  # noqa: BLE001 - 前端需要展示具体失败原因
+		if '无开放获取' in str(e):
+			return _request_ablesci_assist(cit)
 		return {
 			'ok': False,
 			'added': False,
@@ -223,3 +228,79 @@ def ingest_web_citation(payload: dict) -> dict[str, Any]:
 			'title': str(payload.get('title', '')),
 			'message': f'{type(e).__name__}: {e}',
 		}
+
+
+def _request_ablesci_assist(cit) -> dict[str, Any]:
+	"""科研通文献互助降级:发布求助(异步 MCP 调用,endpoint 在线程池中运行可安全 asyncio.run)。"""
+	import asyncio
+
+	from .search.paper_downloader import request_paper
+
+	try:
+		text = asyncio.run(request_paper(doi=cit.doi or '', title=cit.title or ''))
+	except Exception as e:  # noqa: BLE001 - 降级失败也要给前端明确原因
+		return {
+			'ok': False,
+			'added': False,
+			'paper_id': '',
+			'title': cit.title,
+			'message': f'科研通求助发布失败: {type(e).__name__}: {e}',
+		}
+	m_id = re.search(r'求助 ID: ([A-Za-z0-9]+)', text)
+	ok = '求助已发布' in text
+	return {
+		'ok': ok,
+		'added': False,
+		'requested': True,
+		'assist_id': m_id.group(1) if m_id else '',
+		'paper_id': '',
+		'title': cit.title,
+		'message': text,
+	}
+
+
+@router.post('/rag/confirm-assist')
+def confirm_assist(payload: dict) -> dict[str, Any]:
+	"""确认科研通求助的应助文件:接受应助 → 下载 PDF → 复用 ingest_pdf 入库 RAG。
+
+	前端凭 ingest-web 返回的 assist_id 调用;求助尚未被应助时返回当前状态提示。
+	"""
+	import asyncio
+	from pathlib import Path
+
+	from .config import get_config
+	from .rag.index import FaissShards
+	from .rag.ingest import ingest_pdf
+	from .search.paper_downloader import confirm_and_download
+
+	assist_id = str(payload.get('assist_id', '')).strip()
+	if not assist_id:
+		return {'ok': False, 'message': '缺少 assist_id。'}
+	try:
+		text = asyncio.run(confirm_and_download(assist_id))
+	except Exception as e:  # noqa: BLE001
+		return {'ok': False, 'message': f'{type(e).__name__}: {e}'}
+
+	m_path = re.search(r'保存位置: (.+)', text)
+	if not m_path:
+		return {'ok': False, 'message': text}
+
+	pdf_path = Path(m_path.group(1).strip())
+	cfg = get_config()
+	index = FaissShards(cfg.index_path)
+	try:
+		paper = ingest_pdf(pdf_path, index, subfield='web')
+	finally:
+		index.close()
+	if not paper:
+		return {
+			'ok': False,
+			'message': f'PDF 已下载到 {pdf_path},但解析入库失败;可稍后运行 thesis-agent ingest 重试。',
+		}
+	return {
+		'ok': True,
+		'added': True,
+		'paper_id': paper['paper_id'],
+		'title': paper['title'],
+		'message': f'已下载并入库:「{paper["title"]}」({paper["year"] or "?"})',
+	}

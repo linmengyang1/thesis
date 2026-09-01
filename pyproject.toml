@@ -33,6 +33,7 @@ dependencies = [
     "python-dotenv",
     "fastapi>=0.141.1",
     "uvicorn>=0.52.4",
+    "mcp<2",
 ]
 
 [project.scripts]
