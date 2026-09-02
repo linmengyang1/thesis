@@ -37,10 +37,12 @@ class RetrievedChunk:
 
 
 class Retriever:
-	def __init__(self, index: FaissShards) -> None:
+	def __init__(self, index: FaissShards, hybrid: bool = True) -> None:
 		self.index = index
 		self.cfg = get_config()
-		# BM25 进程级缓存:(构建时的全库 chunk 数, bm25 索引, chunk_id 顺序表)
+		# hybrid=False 时仅向量单路召回(用于 A/B 评测对比)
+		self.hybrid = hybrid
+		# BM25 进程级缓存:(构建时的全库 chunk 数, bm25 索引, chunk_id 顺序表, paper_id 映射)
 		# chunk 总数变化(增量入库/删除)即整体重建,库不变则复用
 		self._bm25_cache: tuple[int, object, list[str], dict[str, str]] | None = None
 
@@ -91,7 +93,7 @@ class Retriever:
 
 		# 1) 粗排:双路召回(faiss 向量 + BM25 关键词)RRF 融合,保持 (分数, chunk_id) 结构
 		vec_candidates = self.index.search(q_vec, self.cfg.rag.top_k_candidate, exclude_paper_ids=exclude_paper_ids)
-		bm25_candidates = self._bm25_search(query, self.cfg.rag.top_k_candidate, exclude_paper_ids)
+		bm25_candidates = self._bm25_search(query, self.cfg.rag.top_k_candidate, exclude_paper_ids) if self.hybrid else []
 		fused: dict[str, float] = {}
 		for ranking in (vec_candidates, bm25_candidates):
 			for rank, (_, chunk_id) in enumerate(ranking, start=1):

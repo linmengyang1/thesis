@@ -12,7 +12,9 @@ dependencies = [
     "faiss-cpu",
     # 本地 embedding + rerank(BGE-M3 / bge-reranker)
     "sentence-transformers",
-    # 钉 torch CPU 2.6:2.13 需要更新指令集,i7-8550U(仅 AVX2)加载失败
+    # 钉 torch 2.6:2.13 需要更新指令集,i7-8550U(仅 AVX2)CPU 版加载失败
+    # GPU 加速:uv pip install torch==2.6.0+cu124 -f https://mirrors.aliyun.com/pytorch-wheels/cu124/
+    # 注意:uv sync 会把 torch 重置回 CPU 版,启用 GPU 需重跑上面的安装命令
     "torch==2.6.0",
     # PDF 解析
     "pymupdf",

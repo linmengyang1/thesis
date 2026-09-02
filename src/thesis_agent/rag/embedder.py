@@ -12,6 +12,16 @@ import threading
 from ..config import get_config
 
 
+def _auto_device() -> str:
+	"""设备自动检测:有可用 CUDA(GPU)用 cuda,否则回退 cpu。"""
+	try:
+		import torch
+
+		return 'cuda' if torch.cuda.is_available() else 'cpu'
+	except ImportError:
+		return 'cpu'
+
+
 class Embedder:
 	"""BGE-M3 稠密向量编码器,线程安全单例。"""
 
@@ -26,7 +36,7 @@ class Embedder:
 					from sentence_transformers import SentenceTransformer
 
 					model_name = get_config().rag.embedding_model
-					cls._model = SentenceTransformer(model_name, device='cpu')
+					cls._model = SentenceTransformer(model_name, device=_auto_device())
 		return cls._model
 
 	@classmethod
@@ -55,7 +65,7 @@ class Reranker:
 					from sentence_transformers import CrossEncoder
 
 					model_name = get_config().rag.rerank_model
-					cls._model = CrossEncoder(model_name, max_length=512)
+					cls._model = CrossEncoder(model_name, max_length=512, device=_auto_device())
 		return cls._model
 
 	@classmethod

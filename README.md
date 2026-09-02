@@ -60,7 +60,7 @@
 收尾校验：规则引擎全文核对 引用 ↔ BibTeX 一一对应 + LLM 结构检查
 ```
 
-### 7. Web 工作台
+### 8. Web 工作台
 FastAPI 统一服务 + Vue 3 前端：实时任务看板（3 秒轮询任务板/记忆库）+ SSE 流式研究助手聊天（支持 `/search`、`/rag` 直调工具与结果收藏）。
 
 ## 架构总览
@@ -113,6 +113,9 @@ thesis-agent run --topic "论文主题" --venue "目标会议" --thread-id run1
 
 # 5) Web 工作台（默认 http://127.0.0.1:9000）
 thesis-agent serve
+
+# 6) 离线评测（检索 A/B / 引用有效率 / 评审分布 / 生成质量 / Critic 检出率）
+thesis-agent eval
 ```
 
 产出物（`data/output/`）：
@@ -133,7 +136,7 @@ thesis-multiagent/
 │   ├── memory/               # 长期记忆 / 对话记忆 / 自进化经验
 │   ├── skills/               # 可复用技能包（venue 风格 YAML + 加载器）
 │   ├── citations/            # BibTeX 管理与引用校验
-│   ├── eval.py               # 离线评测（检索命中率 / 引用有效率 / 评审轮次分布）
+│   ├── eval.py               # 离线评测（检索 A/B / 引用有效率 / 评审分布 / LLM-as-judge / Critic 检出率）
 │   ├── search/               # arxiv / Semantic Scholar 检索 + 论文下载 MCP 客户端
 │   ├── llm/                  # 模型分级工厂 + 工具调用
 │   ├── chat_api.py           # Web 聊天后端（SSE 流式）
@@ -153,3 +156,4 @@ thesis-multiagent/
 
 - 本项目仅用于学习与研究，生成内容需人工审核后方可使用
 - Windows / WSL2 均可运行；FAISS 中文路径已做兼容处理
+- GPU 加速（可选）：检测到 CUDA 自动启用（embedding 与 rerank 上 GPU）；安装方式见 pyproject.toml 中 torch 条目注释
