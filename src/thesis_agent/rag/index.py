@@ -118,6 +118,15 @@ class MetadataDB:
 		rows = self._conn.execute('SELECT * FROM chunks WHERE shard = ?', (shard,)).fetchall()
 		return [dict(r) for r in rows]
 
+	def all_chunks_light(self) -> list[dict[str, Any]]:
+		"""全库 chunk 轻量查询(不含向量 bytes),供 BM25 索引构建。"""
+		rows = self._conn.execute('SELECT chunk_id, paper_id, text FROM chunks').fetchall()
+		return [dict(r) for r in rows]
+
+	def chunk_count(self) -> int:
+		"""全库 chunk 总数,用于 BM25 缓存失效判断。"""
+		return int(self._conn.execute('SELECT COUNT(*) FROM chunks').fetchone()[0])
+
 	def chunk_by_ids(self, chunk_ids: list[str]) -> dict[str, dict[str, Any]]:
 		out: dict[str, dict[str, Any]] = {}
 		if not chunk_ids:

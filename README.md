@@ -22,7 +22,7 @@
 
 ### 2. 本地 RAG 分层检索
 - **入库管线**：PDF 解析（保留标题层级与内置元数据）→ 按段落边界分块（约 500 token，10% 重叠，句子对齐）→ BGE-M3 向量化（1024 维）→ FAISS 分片索引 + SQLite 元数据
-- **分层检索**：FAISS 粗排 Top-100 → 元数据过滤（年份/子领域）→ bge-reranker 精排 Top-20
+- **分层检索**：FAISS 向量 + BM25 关键词双路召回（RRF 融合）Top-100 → 元数据过滤（年份/子领域）→ bge-reranker 精排 Top-20；关键词路补齐方法名/缩写等精确匹配盲区
 - **增量索引**：新论文只重建所属分片，不触碰其他分片
 - **Web 补充检索**：arxiv / Semantic Scholar 官方 API，指数退避重试 + 同源限速
 - **自动全文获取**：无开放获取 PDF 的文献自动降级至文献互助渠道（见第 3 节）
@@ -84,7 +84,7 @@ graph TD
 
 ## 技术栈
 
-Python 3.11+ · LangGraph · MCP (FastMCP) · FAISS · BGE-M3 / bge-reranker · PyMuPDF · SQLite · FastAPI · Vue 3 / Vite · DeepSeek API（OpenAI 兼容协议）
+Python 3.11+ · LangGraph · MCP (FastMCP) · FAISS · BM25 (rank-bm25) · BGE-M3 / bge-reranker · PyMuPDF · SQLite · FastAPI · Vue 3 / Vite · DeepSeek API（OpenAI 兼容协议）
 
 ## 快速开始
 
