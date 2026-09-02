@@ -31,9 +31,10 @@ def main() -> None:
 	serve_p.add_argument('--port', type=int, default=9000, help='监听端口(默认 9000)')
 	serve_p.set_defaults(func=_serve)
 
-	eval_p = sub.add_parser('eval', help='离线评测:检索命中率/引用有效率/评审轮次分布')
+	eval_p = sub.add_parser('eval', help='离线评测:检索命中率/引用有效率/评审轮次分布/生成质量/Critic 检出率')
 	eval_p.add_argument('--limit', type=int, default=50, help='自检索评测的论文采样数(默认 50)')
 	eval_p.add_argument('--queries', help='自定义检索标注集 JSONL(每行 {"query":..,"relevant":[paper_id]})')
+	eval_p.add_argument('--skip-llm', action='store_true', help='跳过 LLM 评测(生成质量打分与 Critic 检出率),只跑确定性评测')
 	eval_p.set_defaults(func=_eval)
 
 	args = parser.parse_args()
@@ -96,7 +97,7 @@ def _eval(args: argparse.Namespace) -> None:
 	from .eval import run_eval
 
 	queries_file = Path(args.queries) if args.queries else None
-	print(run_eval(retrieval_limit=args.limit, queries_file=queries_file))
+	print(run_eval(retrieval_limit=args.limit, queries_file=queries_file, skip_llm=args.skip_llm))
 
 
 if __name__ == '__main__':
