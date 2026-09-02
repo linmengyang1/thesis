@@ -42,7 +42,16 @@
 | 长期记忆 | SQLite 命名空间 KV（WAL 并发安全） | 引用库/反馈/经验跨会话存储 |
 | 自进化记忆 | 评审教训沉淀 → 撰写时注入 | 按章节类型聚合经验，按重复频次注入提示词，避免重复犯错 |
 
-### 4. 防幻觉引用治理闭环
+### 5. 可复用技能包（Skills）
+按需注入对应 agent 的知识/流程，与提示词解耦，均为零成本或低成本设计：
+
+| 技能 | 注入点 | 作用 |
+|------|--------|------|
+| venue-style | Drafter | 按 `--venue` 匹配 CVPR/IEEE/学位论文等写作规范（时态/语态/篇幅/术语），YAML 知识包 + 纯规则匹配，零 LLM 成本 |
+| query-expansion | Researcher | LLM 生成同义改写/缩写展开/相关术语 3 类查询变体，多路检索结果去重合并，失败自动回退原始查询 |
+| terminology-consistency | Finalize | 规则检查全文缩写规范（使用未定义 / 重复定义），问题并入一致性报告 |
+
+### 6. 防幻觉引用治理闭环
 四道防线，强制每个论断有文献依据：
 ```
 写前限制：Drafter 只能引用素材白名单内的论文
@@ -51,7 +60,7 @@
 收尾校验：规则引擎全文核对 引用 ↔ BibTeX 一一对应 + LLM 结构检查
 ```
 
-### 6. Web 工作台
+### 7. Web 工作台
 FastAPI 统一服务 + Vue 3 前端：实时任务看板（3 秒轮询任务板/记忆库）+ SSE 流式研究助手聊天（支持 `/search`、`/rag` 直调工具与结果收藏）。
 
 ## 架构总览
@@ -122,7 +131,9 @@ thesis-multiagent/
 │   ├── graph/                # LangGraph 编排（orchestrator + 7 类节点 + 任务板）
 │   ├── rag/                  # PDF 入库 / FAISS 分片索引 / 分层检索
 │   ├── memory/               # 长期记忆 / 对话记忆 / 自进化经验
+│   ├── skills/               # 可复用技能包（venue 风格 YAML + 加载器）
 │   ├── citations/            # BibTeX 管理与引用校验
+│   ├── eval.py               # 离线评测（检索命中率 / 引用有效率 / 评审轮次分布）
 │   ├── search/               # arxiv / Semantic Scholar 检索 + 论文下载 MCP 客户端
 │   ├── llm/                  # 模型分级工厂 + 工具调用
 │   ├── chat_api.py           # Web 聊天后端（SSE 流式）

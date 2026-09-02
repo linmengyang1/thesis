@@ -99,9 +99,14 @@ async def draft_node(state: dict[str, Any], rt: ThesisRuntime) -> dict[str, Any]
 
 		research_budget_chars = int(budget * _RESEARCH_BUDGET_RATIO * 4)
 		whitelist = _format_whitelist(research)
+		# venue-style 技能:按目标会议/期刊注入写作规范
+		from ...skills.venue import load_venue_guidelines
+
+		venue_block = load_venue_guidelines(venue)
 		user_prompt = (
 			f'Paper topic: {topic}\n'
 			f'Target venue: {venue or "not specified"}\n\n'
+			f'Venue style guidelines (follow strictly):\n{venue_block}\n\n'
 			f'Chapter: {chapter.get("title", "")}\n'
 			f'Chapter description: {chapter.get("description", "")}\n\n'
 			f'Research material:\n{_format_research(research, research_budget_chars)}\n\n'

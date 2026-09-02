@@ -1,0 +1,37 @@
+# Venue 写作风格知识包:按目标会议/期刊注入对应写作规范到 Drafter 提示词。
+# 匹配规则见 skills/venue.py:venue 字符串含关键词即命中对应条目,均未命中用 default。
+
+default:
+  tense: 过去时描述已完成的实验与结果,一般现在时陈述普遍事实与方法
+  voice: 以被动语态与客观陈述为主,避免第一人称(We 亦仅用于陈述本文工作)
+  length_hint: 每章 500-800 词,段落聚焦单一论点
+  citations: 每个论断挂引用,禁止编造;引用格式遵循正文 [key] 风格
+  structure: 遵循 Planner 给出的章节结构,段落间用逻辑连接词衔接
+  terminology: 首次出现的缩写先给全称,如 Semantic Learning (SL),之后统一用缩写
+
+cvpr:
+  keywords: [cvpr, iccv, eccv, wacv]
+  tense: 结果与实验用过去时,方法陈述与普遍结论用现在时
+  voice: 允许使用 We 主动语态,句式直接;避免冗长的被动结构
+  length_hint: 每章紧凑,方法章重点讲清动机-设计-效果链条,避免教科书式铺垫
+  citations: 强调与最相关工作的显式对比,引用密度高于一般期刊
+  structure: 方法章节通常配 notation 约定段落;实验章节必须含 implementation details 与 ablation
+  terminology: 缩写首次出现给全称,全文统一;模型名保持原大小写(如 DETR, ResNet)
+
+ieee:
+  keywords: [ieee, tip, tmm, tpami, journal]
+  tense: 方法用现在时,实验过程与结果用过去时
+  voice: 第三人称与被动语态为主,We 仅用于本文工作陈述
+  length_hint: 每章 600-900 词,注重公式与符号的完整定义
+  citations: 引用编号风格,引用需覆盖近 5 年文献且含奠基性工作
+  structure: 章节编号连续;实验章节需说明对比方法的公平设置
+  terminology: 缩写首次出现给全称;数学符号保持全文一致
+
+thesis:
+  keywords: [thesis, dissertation, 学位, 毕业]
+  tense: 综述用现在时,自己的实验用过去时
+  voice: 客观书面语,中英文均避免口语化表达
+  length_hint: 每章篇幅充足,综述章需系统覆盖领域脉络
+  citations: 综述章引用密度最高;需覆盖经典文献与近三年进展
+  structure: 绪论-相关工作-方法-实验-总结结构;每章末尾有小结
+  terminology: 缩写首次出现给全称并保持全文一致;中英术语首次并列给出
